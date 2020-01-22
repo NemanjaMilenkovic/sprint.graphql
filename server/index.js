@@ -60,6 +60,90 @@ const schema = buildSchema(`
     Attack(type: String): [AttackType]
     PokemonByAttack(name:String) :PokemonByAttack
   }
+
+  input WeightInput {
+    minimum: String
+    maximum: String
+  }
+  input HeightInput {
+    minimum: String
+    maximum: String
+  }
+
+  input EvolutionRequirementsInput {
+    amount: Int
+    name: String
+  }
+
+  input EvolutionInput {
+    id: Int
+    name: String
+  }
+
+  input AttackInput {
+    fast: [AttackTypeInput]
+    special: [AttackTypeInput]
+  }
+
+  input AttackTypeInput {
+    name: String
+    type: String
+    damage: Int
+  }
+   type Mutation { 
+     createPokemon(
+       id: String!, 
+       name: String!,     
+       classification: String,
+       types: [String],
+       resistant: [String],
+       weaknesses: [String],
+       weight: WeightInput,
+       height: HeightInput,
+       fleeRate: Float,
+       evolutionRequirements: EvolutionRequirementsInput,
+       evolutions: [EvolutionInput],
+       maxCP: Int,
+       maxHP: Int,
+       attacks: AttackInput
+       ): [Pokemon]
+
+     updatePokemon(
+       id: String, 
+       name: String,     
+       classification: String,
+       types: [String],
+       resistant: [String],
+       weaknesses: [String],
+       weight: WeightInput,
+       height: HeightInput,
+       fleeRate: Float,
+       evolutionRequirements: EvolutionRequirementsInput,
+       evolutions: [EvolutionInput],
+       maxCP: Int,
+       maxHP: Int,
+       attacks: AttackInput
+       ): [Pokemon]
+     deletePokemon(
+       id: String, 
+       name: String
+       ): [Pokemon]
+     createAttack(
+       attackType: String!,
+       name: String!, 
+       type:String, 
+       damage:Int
+     ): [AttackType]
+     updateAttack(
+       attackType: String!, 
+       name: String!, 
+       type:String, 
+       damage:Int
+       ): [AttackType]
+     deleteAttack(attackType: String!, name: String!): [AttackType]
+     createTypes(name: String!): [String]
+     deleteTypes(name: String!): [String]
+  }
 `);
 
 // The root provides the resolver functions for each type of query or mutation.
@@ -88,6 +172,106 @@ const root = {
     return data.pokemon.filter((pokemon) => {
       return pokemon.types.includes(request.type);
     });
+  },
+
+  createPokemon: (request) => {
+    const newPokemon = {
+      id: request.id,
+      name: request.name,
+    };
+    for (const key in data.pokemon[0]) {
+      if (key === "id" || key === "name") continue;
+      if (request[key] !== undefined) newPokemon[key] = request[key];
+      else newPokemon[key] = null;
+    }
+    data.pokemon.push(newPokemon);
+    return data.pokemon;
+  },
+
+  updatePokemon: (request) => {
+    //look for by name
+    let index;
+    if (request.id === undefined) {
+      index = data.pokemon.findIndex(
+        (pokemon) => pokemon.name === request.name
+      );
+    } else {
+      index = data.pokemon.findIndex((pokemon) => pokemon.id === request.id);
+    }
+    for (const key in data.pokemon[index]) {
+      if (request[key] !== undefined) data.pokemon[index][key] = request[key];
+    }
+    return data.pokemon;
+  },
+
+  deletePokemon: (request) => {
+    //look for by name
+    let index;
+    if (request.id === undefined) {
+      index = data.pokemon.findIndex(
+        (pokemon) => pokemon.name === request.name
+      );
+    } else {
+      index = data.pokemon.findIndex((pokemon) => pokemon.id === request.id);
+    }
+    if (index !== -1) data.pokemon.splice(index, 1);
+    return data.pokemon;
+  },
+
+  createAttack: (request) => {
+    if (Object.keys(data.attacks).includes(request.attackType)) {
+      const newAttack = {
+        name: request.name,
+        type: request.type || null,
+        damage: request.damage || null,
+      };
+      data.attacks[request.attackType].push(newAttack);
+    }
+    return data.attacks.fast.concat(data.attacks.special);
+  },
+  updateAttack: (request) => {
+    if (Object.keys(data.attacks).includes(request.attackType)) {
+      const index = data.attacks[request.attackType].findIndex(
+        (attack) => attack.name === request.name
+      );
+
+      //Go thought all key to update
+      if (index !== -1) {
+        const newAttack = {
+          name: request.name,
+          type: request.type || data.attacks[request.attackType][index].type,
+          damage:
+            request.damage || data.attacks[request.attackType][index].damage,
+        };
+        data.attacks[request.attackType][index] = newAttack;
+      }
+    }
+
+    return data.attacks.fast.concat(data.attacks.special);
+  },
+
+  deleteAttack: (request) => {
+    if (Object.keys(data.attacks).includes(request.attackType)) {
+      const index = data.attacks[request.attackType].findIndex(
+        (attack) => attack.name === request.name
+      );
+      if (index !== -1) {
+        data.attacks[request.attackType].splice(index, 1);
+      }
+    }
+
+    return data.attacks.fast.concat(data.attacks.special);
+  },
+
+  createTypes: (request) => {
+    data.types.push(request.name);
+    return data.types;
+  },
+
+  deleteTypes: (request) => {
+    const index = data.types.indexOf(request.name);
+    if (index !== -1) data.types.splice(index, 1);
+    return data.types;
   },
   PokemonByAttack: (request) => {
     const allAttacks = data.attacks.fast.concat(data.attacks.special);
