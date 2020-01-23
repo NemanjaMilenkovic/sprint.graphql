@@ -1,22 +1,25 @@
 const chai = require("chai");
 const chaiHttp = require("chai-http");
-const fetch = require("node-fetch");
+// const fetch = require("node-fetch");
 const expect = chai.expect;
 chai.use(chaiHttp);
-
 // send post request
 // get the result
 // assert
 const customFetch = function(query) {
-  return fetch("http://localhost:4000/graphql", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
-  })
-    .then((res) => {
-      return res.json();
-    })
-    .then((res) => res.data);
+  return chai
+    .request("http://localhost:4000/graphql")
+    .post()
+    .send(JSON.stringify({ query }));
+  // return fetch("http://localhost:4000/graphql", {
+  //   method: "POST",
+  //   headers: { "Content-Type": "application/json" },
+  //   body: JSON.stringify({ query }),
+  // })
+  //   .then((res) => {
+  //     return res.json();
+  //   })
+  //   .then((res) => res.data);
 };
 
 describe("graphQlTests", () => {
