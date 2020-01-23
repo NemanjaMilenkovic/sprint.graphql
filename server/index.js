@@ -151,17 +151,12 @@ const root = {
   Pokemons: () => {
     return data.pokemon;
   },
-  // Types: (request) => {
-  //   return data.types.find;
-  // },
   Pokemon: (request) => {
-    // const idOrName = request.id === undefined ? request.name : request.id;
     if (request.id === undefined)
       return data.pokemon.find((pokemon) => pokemon.name === request.name);
     return data.pokemon.find((pokemon) => pokemon.id === request.id);
   },
   Attack: (request) => {
-    // return data.attacks.fast;
     if (request.type === "fast") {
       return data.attacks.fast;
     } else if (request.type === "special") {
@@ -280,7 +275,7 @@ const root = {
 
     const pokemonByAttack = data.pokemon.filter((pokemon) => {
       const filtered = pokemon.attacks.fast.filter((attack) => {
-        return attack.name === "Tackle";
+        return attack.name === request.attack;
       });
       if (filtered.length === 0) {
         return false;
@@ -294,9 +289,9 @@ const root = {
     const damage = attack.damage;
     console.log("object :", pokemonByAttack);
     return {
-      name: name,
-      type: type,
-      damage: damage,
+      name,
+      type,
+      damage,
       pokemon: pokemonByAttack,
     };
   },
